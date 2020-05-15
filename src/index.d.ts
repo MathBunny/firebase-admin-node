@@ -983,6 +983,44 @@ declare namespace admin.remoteConfig {
   type RemoteConfigParameterValue = ExplicitParameterValue | InAppDefaultValue;
 
   /**
+   * Interface representing a Remote Config version.
+   * */
+  export interface Version {
+    versionNumber?: string | number; // int64 format
+    updateTime?: string; // in RFC3339 UTC "Zulu" format, accurate to nanoseconds
+    updateOrigin?: ('REMOTE_CONFIG_UPDATE_ORIGIN_UNSPECIFIED' | 'CONSOLE' |
+      'REST_API' | 'ADMIN_SDK_NODE');
+    updateType?: ('REMOTE_CONFIG_UPDATE_TYPE_UNSPECIFIED' |
+      'INCREMENTAL_UPDATE' | 'FORCED_UPDATE' | 'ROLLBACK');
+    updateUser?: RemoteConfigUser;
+    description?: string;
+    rollbackSource?: string;
+    isLegacy?: boolean;
+  }
+
+  /** Interface representing a Remote Config list version results. */
+  export interface ListVersionsResult {
+    versions: Version[];
+    nextPageToken?: string;
+  }
+
+  /** Interface representing a Remote Config list version options. */
+  export interface ListVersionsOptions {
+    pageSize?: number;
+    pageToken?: string;
+    endVersionNumber?: string | number;
+    startTime?: Date;
+    endTime?: Date;
+  }
+
+  /** Interface representing a Remote Config user. */
+  export interface RemoteConfigUser {
+    email: string;
+    name?: string;
+    imageUrl?: string;
+  }
+
+  /**
    * The Firebase `RemoteConfig` service interface.
    *
    * Do not call this constructor directly. Instead, use
@@ -1036,6 +1074,22 @@ declare namespace admin.remoteConfig {
     * @return A promise that fulfills with the published `RemoteConfigTemplate`.
     */
     rollback(versionNumber: string | number): Promise<RemoteConfigTemplate>;
+
+    /**
+    * Gets a list of Remote Config template versions that have been published, sorted in reverse 
+    * chronological order. Only the last 300 versions are stored.
+    * All versions that correspond to non-active Remote Config templates (i.e., all except the 
+    * template that is being fetched by clients) are also deleted if they are older than 90 days.
+    * 
+    * @param options Optional options object for getting a list of tempalte versions:
+    *    - {number} `pageSize` description
+    *    - {string} `pageToken` description
+    *    - {string | number} `endVersionNumber` description
+    *    - {Date} `startTime` description
+    *    - {Date} `endTime` description
+    * @return A promise that fulfills with a `ListVersionsResult`.
+    */
+    listVersions(options?: ListVersionsOptions): Promise<ListVersionsResult>;
 
     /**
      * Creates and returns a new Remote Config template from a JSON string.
@@ -1122,7 +1176,7 @@ declare namespace admin.machineLearning {
      *
      * Example: `tfliteModel: { gcsTfliteUri: 'gs://your-bucket/your-model.tflite' }`
      */
-    tfliteModel?: {gcsTfliteUri: string};
+    tfliteModel?: { gcsTfliteUri: string };
   }
 
   /**
